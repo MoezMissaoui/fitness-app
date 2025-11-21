@@ -53,7 +53,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     while (mounted && _currentUser?.emailVerified == false) {
       await Future.delayed(const Duration(seconds: 3));
       if (!mounted) return;
-      
+
       final result = await _authService.reloadUser();
       if (result.isSuccess) {
         final user = _authService.currentUser;
@@ -65,9 +65,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             });
             // Naviguer vers la page d'accueil
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => const MainNavigationPage(),
-              ),
+              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
             );
           }
           break;
@@ -136,17 +134,15 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               duration: Duration(seconds: 2),
             ),
           );
-          
+
           // Attendre un peu pour que l'utilisateur voie le message
           await Future.delayed(const Duration(milliseconds: 500));
-          
+
           // Naviguer vers la page d'accueil
           // AuthWrapper devrait rediriger automatiquement, mais on force la navigation
           if (mounted) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => const MainNavigationPage(),
-              ),
+              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
             );
           }
         }
@@ -154,7 +150,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('L\'email n\'est pas encore vérifié. Vérifiez votre boîte de réception et votre dossier spam.'),
+              content: Text(
+                'L\'email n\'est pas encore vérifié. Vérifiez votre boîte de réception et votre dossier spam.',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -183,33 +181,34 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Future<void> _handleLogout() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Déconnexion'),
-        content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Annuler',
-              style: TextStyle(color: AppTheme.darkGrey),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Déconnexion'),
+            content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.lightPurple,
-              foregroundColor: AppTheme.primaryBlack,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  'Annuler',
+                  style: TextStyle(color: AppTheme.darkGrey),
+                ),
               ),
-            ),
-            child: const Text('Déconnexion'),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.lightPurple,
+                  foregroundColor: AppTheme.primaryBlack,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text('Déconnexion'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
 
     if (shouldLogout == true) {
@@ -248,9 +247,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 Text(
                   'Vérification d\'email requise',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryBlack,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlack,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -258,53 +257,21 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 // Message
                 Text(
                   'Un email de vérification a été envoyé à :',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.darkGrey,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: AppTheme.darkGrey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _currentUser?.email ?? 'email@example.com',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryBlack,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlack,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                // Note sur le spam
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.orange.shade200,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Colors.orange.shade700,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Si vous ne trouvez pas l\'email, vérifiez votre dossier spam/courrier indésirable.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.orange.shade900,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
 
                 // Instructions
                 Container(
@@ -330,22 +297,30 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                           const SizedBox(width: 8),
                           Text(
                             'Instructions',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryBlack,
-                                ),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryBlack,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildInstructionStep('1', 'Vérifiez votre boîte de réception (et votre dossier spam)'),
+                      _buildInstructionStep(
+                        '1',
+                        'Vérifiez votre boîte de réception (et votre dossier spam)',
+                      ),
                       const SizedBox(height: 8),
-                      _buildInstructionStep('2', 'Cliquez sur le lien de vérification'),
+                      _buildInstructionStep(
+                        '2',
+                        'Cliquez sur le lien de vérification',
+                      ),
                       const SizedBox(height: 8),
-                      _buildInstructionStep('3', 'Revenez ici et cliquez sur "Actualiser"'),
+                      _buildInstructionStep(
+                        '3',
+                        'Revenez ici et cliquez sur "Actualiser"',
+                      ),
                     ],
                   ),
                 ),
@@ -355,14 +330,16 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isSendingEmail ? null : _handleSendVerificationEmail,
-                    icon: _isSendingEmail
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.email_outlined),
+                    onPressed:
+                        _isSendingEmail ? null : _handleSendVerificationEmail,
+                    icon:
+                        _isSendingEmail
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Icon(Icons.email_outlined),
                     label: Text(
                       _isSendingEmail
                           ? 'Envoi en cours...'
@@ -386,13 +363,14 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleRefresh,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh),
+                    icon:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Icon(Icons.refresh),
                     label: const Text('Actualiser'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.lightBlue,
@@ -451,13 +429,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         Expanded(
           child: Text(
             text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.darkGrey,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.darkGrey),
           ),
         ),
       ],
     );
   }
 }
-
