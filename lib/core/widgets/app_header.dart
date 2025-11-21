@@ -76,16 +76,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     // TODO: Naviguer vers le profil
                   },
                   child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: AppTheme.lightBlue,
-                      child: const Icon(
-                        Icons.person,
-                        color: AppTheme.primaryBlack,
-                        size: 24,
-                      ),
+                    radius: 20,
+                    backgroundColor: AppTheme.lightBlue,
+                    child: const Icon(
+                      Icons.person,
+                      color: AppTheme.primaryBlack,
+                      size: 24,
                     ),
                   ),
                 ),

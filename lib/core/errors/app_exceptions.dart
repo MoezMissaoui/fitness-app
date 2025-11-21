@@ -30,3 +30,8 @@ class JsonParseException extends AppException {
 class AssetException extends AppException {
   const AssetException(super.message, [super.code]);
 }
+
+/// Exception pour les erreurs d'authentification
+class AuthException extends AppException {
+  const AuthException(super.message, [super.code]);
+}

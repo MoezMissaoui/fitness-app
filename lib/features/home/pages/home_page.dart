@@ -1,20 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/app_header.dart';
+import '../../../di/service_locator.dart';
 import '../../../features/exercises/pages/exercises_list_page.dart';
 import '../widgets/body_parts_section.dart';
 import '../widgets/training_card.dart';
 
 /// Page d'accueil principale avec entraînements
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final authService = ServiceLocator.instance.authService;
+    setState(() {
+      _currentUser = authService.currentUser;
+    });
+  }
+
+  String _getUserName() {
+    return _currentUser?.displayName ??
+        _currentUser?.email?.split('@')[0] ??
+        'Utilisateur';
+  }
+
+  Future<void> _handleRefresh() async {
+    // Recharger les données utilisateur
+    _loadUserData();
+    // Attendre un peu pour l'animation de refresh
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppHeader(
-        userName: 'Michelle',
+        userName: _getUserName(),
         showActionButton: true,
         actionIcon: Icons.flash_on,
         onActionPressed: () {
@@ -28,50 +63,54 @@ class HomePage extends StatelessWidget {
           final padding = Responsive.padding(context);
           final spacing = Responsive.spacing(context, 10);
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.only(
-              left: padding.left,
-              right: padding.right,
-              top: 20,
-              bottom: padding.bottom,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-                maxWidth:
-                    Responsive.isDesktop(context) ? 1200 : double.infinity,
+          return RefreshIndicator(
+            onRefresh: _handleRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.only(
+                left: padding.left,
+                right: padding.right,
+                top: 20,
+                bottom: padding.bottom,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section Body Parts
-                  const BodyPartsSection(),
-                  SizedBox(height: spacing),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                  maxWidth:
+                      Responsive.isDesktop(context) ? 1200 : double.infinity,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section Body Parts
+                    const BodyPartsSection(),
+                    SizedBox(height: spacing),
 
-                  // Section Trainings
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Trainings',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                    // Section Trainings
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Trainings',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // TODO: Naviguer vers toutes les trainings
-                        },
-                        child: const Text('See all'),
-                      ),
-                    ],
-                  ),
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Naviguer vers toutes les trainings
+                          },
+                          child: const Text('See all'),
+                        ),
+                      ],
+                    ),
 
-                  SizedBox(height: spacing),
+                    SizedBox(height: spacing),
 
-                  // Cartes d'entraînements - Responsive grid
-                  _buildTrainingsSection(context),
-                ],
+                    // Cartes d'entraînements - Responsive grid
+                    _buildTrainingsSection(context),
+                  ],
+                ),
               ),
             ),
           );

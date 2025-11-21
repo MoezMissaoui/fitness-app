@@ -1,6 +1,8 @@
 import '../repositories/exercise_repository.dart';
 import '../services/database_service.dart';
 import '../services/reference_data_service.dart';
+import '../services/auth_service.dart';
+import '../services/minio_storage_service.dart';
 
 /// Service Locator pour l'injection de dépendances
 /// Pattern Singleton pour centraliser l'accès aux services
@@ -12,6 +14,8 @@ class ServiceLocator {
   // Services
   DatabaseService? _databaseService;
   ReferenceDataService? _referenceDataService;
+  AuthService? _authService;
+  MinIOStorageService? _storageService;
 
   // Repositories
   ExerciseRepository? _exerciseRepository;
@@ -21,6 +25,8 @@ class ServiceLocator {
     // Initialisation des services
     _databaseService = DatabaseService();
     _referenceDataService = ReferenceDataService();
+    _authService = AuthService();
+    _storageService = MinIOStorageService();
 
     // Initialisation de la base de données (charge les données si nécessaire)
     await _databaseService!.database;
@@ -32,7 +38,9 @@ class ServiceLocator {
   /// Récupère le service de base de données
   DatabaseService get databaseService {
     if (_databaseService == null) {
-      throw StateError('ServiceLocator non initialisé. Appelez init() d\'abord.');
+      throw StateError(
+        'ServiceLocator non initialisé. Appelez init() d\'abord.',
+      );
     }
     return _databaseService!;
   }
@@ -40,7 +48,9 @@ class ServiceLocator {
   /// Récupère le service de données de référence
   ReferenceDataService get referenceDataService {
     if (_referenceDataService == null) {
-      throw StateError('ServiceLocator non initialisé. Appelez init() d\'abord.');
+      throw StateError(
+        'ServiceLocator non initialisé. Appelez init() d\'abord.',
+      );
     }
     return _referenceDataService!;
   }
@@ -48,9 +58,31 @@ class ServiceLocator {
   /// Récupère le repository d'exercices
   ExerciseRepository get exerciseRepository {
     if (_exerciseRepository == null) {
-      throw StateError('ServiceLocator non initialisé. Appelez init() d\'abord.');
+      throw StateError(
+        'ServiceLocator non initialisé. Appelez init() d\'abord.',
+      );
     }
     return _exerciseRepository!;
+  }
+
+  /// Récupère le service d'authentification
+  AuthService get authService {
+    if (_authService == null) {
+      throw StateError(
+        'ServiceLocator non initialisé. Appelez init() d\'abord.',
+      );
+    }
+    return _authService!;
+  }
+
+  /// Récupère le service de stockage
+  MinIOStorageService get storageService {
+    if (_storageService == null) {
+      throw StateError(
+        'ServiceLocator non initialisé. Appelez init() d\'abord.',
+      );
+    }
+    return _storageService!;
   }
 
   /// Réinitialise tous les services (utile pour les tests)
@@ -58,7 +90,8 @@ class ServiceLocator {
     await _databaseService?.closeDatabase();
     _databaseService = null;
     _referenceDataService = null;
+    _authService = null;
+    _storageService = null;
     _exerciseRepository = null;
   }
 }
-

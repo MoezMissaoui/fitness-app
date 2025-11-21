@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/utils/result.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/app_header.dart';
@@ -32,6 +33,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
   final ExerciseRepository _repository =
       ServiceLocator.instance.exerciseRepository;
   final TextEditingController _searchController = TextEditingController();
+  final _authService = ServiceLocator.instance.authService;
 
   List<Exercise> _exercises = [];
   bool _isLoading = true;
@@ -40,10 +42,12 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
   List<String> _selectedBodyParts = [];
   List<String> _selectedEquipments = [];
   List<String> _selectedMuscles = [];
+  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     // Initialiser avec les valeurs passées en paramètre
     if (widget.initialBodyPart != null) {
       _selectedBodyParts = [widget.initialBodyPart!];
@@ -57,14 +61,36 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
     _loadExercises();
   }
 
+  void _loadUserData() {
+    if (!mounted) return;
+    setState(() {
+      _currentUser = _authService.currentUser;
+    });
+  }
+
+  String _getUserName() {
+    return _currentUser?.displayName ??
+        _currentUser?.email?.split('@')[0] ??
+        'Utilisateur';
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Gère le refresh (pull-to-refresh)
+  Future<void> _handleRefresh() async {
+    // Recharger les exercices
+    await _loadExercises();
+    // Recharger les données utilisateur
+    _loadUserData();
+  }
+
   /// Charge les exercices avec les filtres actuels
   Future<void> _loadExercises() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -77,6 +103,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
       searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
     );
 
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       result.map((exercises) {
@@ -93,6 +120,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
 
   /// Gère la recherche
   void _onSearchChanged(String query) {
+    if (!mounted) return;
     setState(() {
       _searchQuery = query;
     });
@@ -101,6 +129,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
 
   /// Gère le changement de filtres de partie du corps
   void _onBodyPartsChanged(List<String> bodyParts) {
+    if (!mounted) return;
     setState(() {
       _selectedBodyParts = bodyParts;
     });
@@ -109,6 +138,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
 
   /// Gère le changement de filtres d'équipement
   void _onEquipmentsChanged(List<String> equipments) {
+    if (!mounted) return;
     setState(() {
       _selectedEquipments = equipments;
     });
@@ -117,6 +147,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
 
   /// Gère le changement de filtres de muscle
   void _onMusclesChanged(List<String> muscles) {
+    if (!mounted) return;
     setState(() {
       _selectedMuscles = muscles;
     });
@@ -125,6 +156,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
 
   /// Réinitialise tous les filtres
   void _clearFilters() {
+    if (!mounted) return;
     setState(() {
       _searchQuery = '';
       _selectedBodyParts = [];
@@ -139,7 +171,7 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppHeader(
-        userName: 'Michelle',
+        userName: _getUserName(),
         showActionButton: true,
         showGreeting: false,
         showCalories: true,
@@ -150,63 +182,67 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
           FocusScope.of(context).unfocus();
         },
         behavior: HitTestBehavior.opaque,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final padding = Responsive.padding(context);
-            final spacing = Responsive.spacing(context, 24);
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final padding = Responsive.padding(context);
+              final spacing = Responsive.spacing(context, 24);
 
-            return CustomScrollView(
-              slivers: [
-                // Header avec recherche et filtres
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: padding.left,
-                      right: padding.right,
-                      bottom: padding.bottom,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Barre de recherche
-                        _buildSearchBar(context),
+              return CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  // Header avec recherche et filtres
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: padding.left,
+                        right: padding.right,
+                        bottom: padding.bottom,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Barre de recherche
+                          _buildSearchBar(context),
 
-                        SizedBox(height: spacing * 0.67),
+                          SizedBox(height: spacing * 0.67),
 
-                        // Filtres
-                        _buildFiltersSection(context),
+                          // Filtres
+                          _buildFiltersSection(context),
 
-                        SizedBox(height: spacing),
+                          SizedBox(height: spacing),
 
-                        // Titre de la section
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Exercices',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            if (_exercises.isNotEmpty && !_isLoading)
+                          // Titre de la section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Text(
-                                '${_exercises.length} exercices',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.darkGrey),
+                                'Exercices',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
-                          ],
-                        ),
+                              if (_exercises.isNotEmpty && !_isLoading)
+                                Text(
+                                  '${_exercises.length} exercices',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(color: AppTheme.darkGrey),
+                                ),
+                            ],
+                          ),
 
-                        SizedBox(height: spacing * 0.67),
-                      ],
+                          SizedBox(height: spacing * 0.67),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                // Liste des exercices avec lazy loading
-                _buildExercisesListSliver(context, padding, spacing),
-              ],
-            );
-          },
+                  // Liste des exercices avec lazy loading
+                  _buildExercisesListSliver(context, padding, spacing),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -426,9 +462,10 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
       }
 
       if (!mounted) return;
+      final navigatorContext = context;
 
       await showModalBottomSheet<void>(
-        context: context,
+        context: navigatorContext,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder:
@@ -449,11 +486,11 @@ class _ExercisesListPageState extends State<ExercisesListPage> {
             ),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors du chargement: $e')),
-        );
-      }
+      if (!mounted) return;
+      final messengerContext = context;
+      ScaffoldMessenger.of(
+        messengerContext,
+      ).showSnackBar(SnackBar(content: Text('Erreur lors du chargement: $e')));
     }
   }
 

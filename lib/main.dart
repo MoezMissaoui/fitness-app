@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/asset_verifier.dart';
+import 'core/firebase/firebase_init.dart';
 import 'di/service_locator.dart';
-import 'features/main_navigation/main_navigation_page.dart';
+import 'features/auth/widgets/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialisation de Firebase avec test de connexion en mode debug
+  await initializeFirebase(testConnection: true);
 
   // Vérification des assets
   AssetVerifier.printAssetPaths();
@@ -41,7 +45,7 @@ class MyApp extends StatelessWidget {
           ), // Fond beige/crème comme le header
           statusBarIconBrightness: Brightness.dark,
         ),
-        child: const MainNavigationPage(),
+        child: const AuthWrapper(),
       ),
     );
   }
