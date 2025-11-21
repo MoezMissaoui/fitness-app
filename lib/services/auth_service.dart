@@ -197,6 +197,46 @@ class AuthService {
     }
   }
 
+  /// Change l'email de l'utilisateur
+  /// Nécessite une vérification du nouvel email
+  Future<Result<void>> changeEmail({
+    required String newEmail,
+    required String password,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        return const Failure(
+          AuthException('Aucun utilisateur connecté'),
+        );
+      }
+
+      // Vérifier le mot de passe actuel en se reconnectant
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Changer l'email avec vérification
+      // verifyBeforeUpdateEmail envoie automatiquement un email de vérification
+      // L'email ne sera changé qu'après que l'utilisateur clique sur le lien dans l'email
+      await user.verifyBeforeUpdateEmail(newEmail);
+      
+      // Note: Firestore sera mis à jour automatiquement après la vérification
+      // car l'utilisateur sera rechargé et l'email sera mis à jour dans Firebase Auth
+
+      return const Success(null);
+    } on FirebaseAuthException catch (e, stackTrace) {
+      return Failure(_handleAuthException(e), stackTrace);
+    } catch (e, stackTrace) {
+      return Failure(
+        AuthException('Erreur lors du changement d\'email: ${e.toString()}'),
+        stackTrace,
+      );
+    }
+  }
+
   /// Mise à jour du profil utilisateur
   Future<Result<UserModel>> updateProfile({
     String? displayName,

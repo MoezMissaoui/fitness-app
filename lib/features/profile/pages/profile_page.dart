@@ -7,6 +7,7 @@ import '../../../di/service_locator.dart';
 import '../../../core/utils/result.dart';
 import '../../../core/errors/app_exceptions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'edit_profile_page.dart';
 
 /// Page de profil utilisateur
 class ProfilePage extends StatefulWidget {
@@ -307,79 +308,127 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      child: Column(
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // Avatar avec bouton de changement
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: AppTheme.lightBlue,
-                child:
-                    _isUploadingImage
-                        ? const CircularProgressIndicator(
-                          color: AppTheme.primaryBlack,
-                        )
-                        : _currentUser?.photoURL != null
-                        ? ClipOval(
-                          child: Image.network(
-                            _currentUser!.photoURL!,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
+          // Contenu principal centré
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Avatar avec bouton de changement
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppTheme.lightBlue,
+                      child:
+                          _isUploadingImage
+                              ? const CircularProgressIndicator(
+                                color: AppTheme.primaryBlack,
+                              )
+                              : _currentUser?.photoURL != null
+                              ? ClipOval(
+                                child: Image.network(
+                                  _currentUser!.photoURL!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: AppTheme.primaryBlack,
+                                    );
+                                  },
+                                ),
+                              )
+                              : Icon(
                                 Icons.person,
                                 size: 50,
                                 color: AppTheme.primaryBlack,
-                              );
-                            },
+                              ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _isUploadingImage ? null : _pickAndUploadImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.lightPurple,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
-                        )
-                        : Icon(
-                          Icons.person,
-                          size: 50,
-                          color: AppTheme.primaryBlack,
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 20,
+                            color: AppTheme.primaryBlack,
+                          ),
                         ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _isUploadingImage ? null : _pickAndUploadImage,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.lightPurple,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      size: 20,
-                      color: AppTheme.primaryBlack,
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Nom
+                Text(
+                  _currentUser?.displayName ?? 'Utilisateur',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlack,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                // Email
+                Text(
+                  _currentUser?.email ?? '',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.darkGrey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          // Icône d'édition en haut à droite (positionnée absolument)
+          Positioned(
+            top: -8,
+            right: -8,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfilePage(),
                     ),
+                  ).then((_) {
+                    // Recharger les données après retour
+                    _loadUserData();
+                  });
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.lightBlue.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.lightBlue.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.edit_outlined,
+                    color: AppTheme.lightBlue,
+                    size: 18,
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Nom
-          Text(
-            _currentUser?.displayName ?? 'Utilisateur',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryBlack,
             ),
-          ),
-          const SizedBox(height: 4),
-          // Email
-          Text(
-            _currentUser?.email ?? '',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.darkGrey),
           ),
         ],
       ),
@@ -423,6 +472,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
 
 
   Widget _buildInfoItem({
