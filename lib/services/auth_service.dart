@@ -67,17 +67,51 @@ class AuthService {
         
         if (kDebugMode) {
           debugPrint('✅ Document utilisateur créé dans Firestore: ${user.uid}');
+          debugPrint('   Collection: users');
+          debugPrint('   Document ID: ${user.uid}');
         }
       } catch (e, stackTrace) {
         // Si Firestore n'est pas configuré, continuer quand même
         // L'utilisateur sera créé dans Firebase Auth, c'est l'essentiel
         if (kDebugMode) {
-          debugPrint('⚠️ ERREUR: Impossible d\'écrire dans Firestore');
+          debugPrint('❌ ERREUR CRITIQUE: Impossible d\'écrire dans Firestore');
+          debugPrint('═══════════════════════════════════════════════════════');
           debugPrint('Type d\'erreur: ${e.runtimeType}');
           debugPrint('Message: $e');
-          debugPrint('Stack trace: $stackTrace');
+          debugPrint('═══════════════════════════════════════════════════════');
+          
+          // Diagnostic spécifique
+          final errorString = e.toString();
+          if (errorString.contains('NOT_FOUND') || errorString.contains('does not exist')) {
+            debugPrint('🔴 PROBLÈME IDENTIFIÉ: Firestore n\'est PAS activé !');
+            debugPrint('');
+            debugPrint('📋 SOLUTION:');
+            debugPrint('   1. Allez sur https://console.firebase.google.com/');
+            debugPrint('   2. Sélectionnez le projet: fitness-app-4f62a');
+            debugPrint('   3. Cliquez sur "Firestore Database" dans le menu');
+            debugPrint('   4. Cliquez sur "Create database"');
+            debugPrint('   5. Choisissez "Start in test mode"');
+            debugPrint('   6. Sélectionnez une région et cliquez sur "Enable"');
+            debugPrint('');
+          } else if (errorString.contains('PERMISSION_DENIED')) {
+            debugPrint('🔴 PROBLÈME IDENTIFIÉ: Règles de sécurité Firestore !');
+            debugPrint('');
+            debugPrint('📋 SOLUTION:');
+            debugPrint('   1. Allez dans Firebase Console > Firestore Database > Rules');
+            debugPrint('   2. Utilisez ces règles pour le développement:');
+            debugPrint('      match /users/{userId} {');
+            debugPrint('        allow read, write: if request.auth != null && request.auth.uid == userId;');
+            debugPrint('      }');
+            debugPrint('   3. Cliquez sur "Publish"');
+            debugPrint('');
+          } else {
+            debugPrint('🔴 PROBLÈME: Erreur inconnue');
+            debugPrint('Stack trace: $stackTrace');
+          }
+          
+          debugPrint('═══════════════════════════════════════════════════════');
           debugPrint('L\'utilisateur est créé dans Firebase Auth mais pas dans Firestore.');
-          debugPrint('Vérifiez que Firestore est activé dans Firebase Console.');
+          debugPrint('═══════════════════════════════════════════════════════');
         }
       }
 

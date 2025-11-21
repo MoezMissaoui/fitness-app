@@ -10,13 +10,13 @@ class FirebaseConnectionTest {
     try {
       final app = Firebase.app();
       if (kDebugMode) {
-        print('✅ Firebase app instance: ${app.name}');
-        print('✅ Firebase project ID: ${app.options.projectId}');
+        debugPrint('✅ Firebase app instance: ${app.name}');
+        debugPrint('✅ Firebase project ID: ${app.options.projectId}');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Erreur de connexion Firebase de base: $e');
+        debugPrint('❌ Erreur de connexion Firebase de base: $e');
       }
       return false;
     }
@@ -29,13 +29,13 @@ class FirebaseConnectionTest {
       // Essayer d'accéder à l'instance (cela teste la connexion)
       final currentUser = auth.currentUser;
       if (kDebugMode) {
-        print('✅ Firebase Auth connecté');
-        print('   Utilisateur actuel: ${currentUser?.email ?? 'Aucun'}');
+        debugPrint('✅ Firebase Auth connecté');
+        debugPrint('   Utilisateur actuel: ${currentUser?.email ?? 'Aucun'}');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Erreur de connexion Firebase Auth: $e');
+        debugPrint('❌ Erreur de connexion Firebase Auth: $e');
       }
       return false;
     }
@@ -48,13 +48,13 @@ class FirebaseConnectionTest {
       // Essayer d'accéder à l'instance (cela teste la connexion)
       final settings = firestore.settings;
       if (kDebugMode) {
-        print('✅ Firestore connecté');
-        print('   Cache size: ${settings.cacheSizeBytes}');
+        debugPrint('✅ Firestore connecté');
+        debugPrint('   Cache size: ${settings.cacheSizeBytes}');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Erreur de connexion Firestore: $e');
+        debugPrint('❌ Erreur de connexion Firestore: $e');
       }
       return false;
     }
@@ -68,12 +68,52 @@ class FirebaseConnectionTest {
       // On utilise une limite pour éviter de charger trop de données
       await firestore.collection('_test_connection').limit(1).get();
       if (kDebugMode) {
-        print('✅ Test de lecture Firestore réussi');
+        debugPrint('✅ Test de lecture Firestore réussi');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Erreur lors du test de lecture Firestore: $e');
+        debugPrint('❌ Erreur lors du test de lecture Firestore: $e');
+        debugPrint('   Type: ${e.runtimeType}');
+        if (e is Exception) {
+          debugPrint('   Message: ${e.toString()}');
+        }
+      }
+      return false;
+    }
+  }
+
+  /// Teste une opération Firestore réelle (écriture)
+  /// C'est le test le plus important pour vérifier si Firestore est activé
+  static Future<bool> testFirestoreWrite() async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      // Essayer d'écrire dans une collection de test
+      final testDoc = firestore.collection('_test_connection').doc('_test_write');
+      await testDoc.set({
+        'test': true,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      
+      // Nettoyer : supprimer le document de test
+      await testDoc.delete();
+      
+      if (kDebugMode) {
+        debugPrint('✅ Test d\'écriture Firestore réussi');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ ERREUR lors du test d\'écriture Firestore:');
+        debugPrint('   Type: ${e.runtimeType}');
+        debugPrint('   Message: $e');
+        if (e.toString().contains('NOT_FOUND')) {
+          debugPrint('   ⚠️ Firestore n\'est PAS activé dans Firebase Console !');
+          debugPrint('   📋 Solution: Allez dans Firebase Console > Firestore Database > Create database');
+        } else if (e.toString().contains('PERMISSION_DENIED')) {
+          debugPrint('   ⚠️ Les règles de sécurité Firestore bloquent l\'écriture !');
+          debugPrint('   📋 Solution: Vérifiez les règles Firestore dans Firebase Console');
+        }
       }
       return false;
     }
@@ -82,7 +122,7 @@ class FirebaseConnectionTest {
   /// Teste toutes les connexions Firebase
   static Future<Map<String, bool>> testAllConnections() async {
     if (kDebugMode) {
-      print('\n🔍 Test de connexion Firebase...\n');
+      debugPrint('\n🔍 Test de connexion Firebase...\n');
     }
 
     final results = <String, bool>{};
@@ -98,19 +138,22 @@ class FirebaseConnectionTest {
 
     // Test 4: Lecture Firestore
     results['Firestore Read'] = await testFirestoreRead();
+    
+    // Test 5: Écriture Firestore (le plus important)
+    results['Firestore Write'] = await testFirestoreWrite();
 
     // Résumé
     if (kDebugMode) {
-      print('\n📊 Résumé des tests:');
+      debugPrint('\n📊 Résumé des tests:');
       results.forEach((key, value) {
-        print('   ${value ? "✅" : "❌"} $key: ${value ? "OK" : "ÉCHEC"}');
+        debugPrint('   ${value ? "✅" : "❌"} $key: ${value ? "OK" : "ÉCHEC"}');
       });
 
       final allPassed = results.values.every((value) => value);
       if (allPassed) {
-        print('\n🎉 Tous les tests de connexion Firebase ont réussi!\n');
+        debugPrint('\n🎉 Tous les tests de connexion Firebase ont réussi!\n');
       } else {
-        print('\n⚠️ Certains tests ont échoué. Vérifiez la configuration.\n');
+        debugPrint('\n⚠️ Certains tests ont échoué. Vérifiez la configuration.\n');
       }
     }
 
@@ -134,17 +177,17 @@ class FirebaseConnectionTest {
       final options = app.options;
       
       if (kDebugMode) {
-        print('\n📱 Informations Firebase:');
-        print('   App Name: ${app.name}');
-        print('   Project ID: ${options.projectId}');
-        print('   API Key: ${options.apiKey.substring(0, 10)}...');
-        print('   App ID: ${options.appId}');
-        print('   Storage Bucket: ${options.storageBucket}');
-        print('   Messaging Sender ID: ${options.messagingSenderId}');
+        debugPrint('\n📱 Informations Firebase:');
+        debugPrint('   App Name: ${app.name}');
+        debugPrint('   Project ID: ${options.projectId}');
+        debugPrint('   API Key: ${options.apiKey.substring(0, 10)}...');
+        debugPrint('   App ID: ${options.appId}');
+        debugPrint('   Storage Bucket: ${options.storageBucket}');
+        debugPrint('   Messaging Sender ID: ${options.messagingSenderId}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Impossible d\'obtenir les informations Firebase: $e');
+        debugPrint('❌ Impossible d\'obtenir les informations Firebase: $e');
       }
     }
   }

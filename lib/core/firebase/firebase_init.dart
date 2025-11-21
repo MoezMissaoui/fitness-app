@@ -14,20 +14,31 @@ Future<void> initializeFirebase({bool testConnection = false}) async {
     );
 
     if (kDebugMode) {
-      print('✅ Firebase initialisé avec succès');
+      debugPrint('✅ Firebase initialisé avec succès');
 
       // Afficher les informations Firebase
       FirebaseConnectionTest.printFirebaseInfo();
 
       // Tester la connexion si demandé
       if (testConnection) {
-        await FirebaseConnectionTest.testAllConnections();
+        final results = await FirebaseConnectionTest.testAllConnections();
+        
+        // Afficher un avertissement si Firestore Write échoue
+        if (results['Firestore Write'] == false) {
+          if (kDebugMode) {
+            debugPrint('');
+            debugPrint('⚠️ ATTENTION: Firestore ne peut pas écrire !');
+            debugPrint('   La collection "users" ne sera pas créée automatiquement.');
+            debugPrint('   Activez Firestore dans Firebase Console pour résoudre ce problème.');
+            debugPrint('');
+          }
+        }
       }
     }
   } catch (e, stackTrace) {
     if (kDebugMode) {
-      print('❌ Erreur lors de l\'initialisation de Firebase: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('❌ Erreur lors de l\'initialisation de Firebase: $e');
+      debugPrint('Stack trace: $stackTrace');
     }
     rethrow;
   }
